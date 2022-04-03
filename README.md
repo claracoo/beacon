@@ -1,1 +1,1 @@
-# beacon
+Welcome to Ally, the accessibility street crossing helper!
