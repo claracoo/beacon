@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Image, View, Text, Dimensions } from 'react-native';
+import { Image, View, Text, Dimensions, TouchableOpacity } from 'react-native';
 import { Grid, Col, Row } from 'react-native-easy-grid';
 import { Magnetometer } from 'expo-sensors';
 import * as Haptics from 'expo-haptics';
+// import { trigger } from 'react-native-haptic-feedback';
 
 
 const { height, width } = Dimensions.get('window');
@@ -12,7 +13,8 @@ export default App = () => {
   const [subscription, setSubscription] = useState(null);
   const [magnetometer, setMagnetometer] = useState(0);
   const [inRange, setInRange] = useState(false);
-  const [checkpoints, setCheckpoints] = [0, 0, 90, 90, 180, 180, 270, 270]
+  const [checkpoints, setCheckpoints] = [0, 0, 90, 90, 180, 180, 270, 270];
+  const [beacon, setBeacon] = useState(0);
 
   useEffect(() => {
     _toggle();
@@ -89,11 +91,32 @@ export default App = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
   }
 
+  const normalize = () => {
+    let range = [beacon + 20, beacon - 20]
+    if (beacon < 20) {
+      range[1] = 360 - 20 - beacon
+    }
+    if (beacon > 340) {
+      range[0] = 360 - beacon + 20 
+    }
+    if (beacon == 0) {
+      range = [20, 340]
+    }
+    range.sort()
+    return range
+  }
 
   // Match the device top with pointer 0° degree. (By default 0° starts from the right of the device.)
   const _degree = (magnetometer) => {
     let degree = magnetometer - 90 >= 0 ? magnetometer - 90 : magnetometer + 271;
-    if (degree < 20 || degree > 340) {
+    // console.log(beacon, normalize(), degree)
+    if ((beacon < 20 || beacon > 340) && (degree < normalize()[0] || degree > normalize()[1])) {
+      // console.log("loopy")
+      if (!inRange) setInRange(true);
+      buzz_heavy();
+    }
+    else if ((beacon > 20 && beacon < 340) && (degree > normalize()[0] && degree < normalize()[1])) {
+      // console.log("normal")
       if (!inRange) setInRange(true);
       buzz_heavy();
     }
@@ -107,6 +130,19 @@ export default App = () => {
     //   buzz_heavy();
     return degree
   };
+
+  const activateBeacon = (magnetometer) => {
+    let degree = magnetometer - 90 >= 0 ? magnetometer - 90 : magnetometer + 271;
+    setBeacon(degree)
+    // console.log(degree)
+  }
+
+  const arrowTransform = (magnetometer) => {
+    let transform = (0 - beacon + 270) % 360
+    if (beacon == 0) transform = 270;
+    console.log("transform", transform, magnetometer)
+    return transform
+  }
 
   return (
 
@@ -136,11 +172,13 @@ export default App = () => {
       <Row style={{ alignItems: 'center' }} size={.1}>
         <Col style={{ alignItems: 'center' }}>
           <View style={{ position: 'absolute', width: width, alignItems: 'center', top: 0 }}>
+            <TouchableOpacity onPress={() => activateBeacon(magnetometer)}>
             <Image source={require('./assets/arrow.png')} style={{
               height: height - 30,
               resizeMode: 'contain',
-              transform: [{ rotate: magnetometer + 270 + 'deg' }]
+              transform: [{ rotate: 0 - (magnetometer + Number(arrowTransform(magnetometer))) + 'deg' }]
             }} />
+            </TouchableOpacity>
           </View>
         </Col>
       </Row>

@@ -1,9 +1,9 @@
 {
   "expo": {
-    "name": "Compass",
-    "description": "A simple compass app built with expo & react-native.",
-    "githubUrl": "https://github.com/rahulhaque/compass-react-native-expo",
-    "slug": "compass",
+    "name": "Signally",
+    "description": "A helper to public signage for the visually impaired",
+    "githubUrl": "https://github.com/claracoo/beacon",
+    "slug": "signally",
     "platforms": [
       "ios",
       "android",
